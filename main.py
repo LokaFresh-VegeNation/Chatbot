@@ -158,7 +158,7 @@ def extract_number(text: str) -> int:
     match = re.search(r"\d+", text)
     return int(match.group()) if match else 1
 
-def chatbot_test(user_input): 
+def chatbot_run(user_input): 
     corrected_input = correct_spelling(user_input)
     print(f"Input setelah spelling correction: {corrected_input}")
 
@@ -181,7 +181,9 @@ def chatbot_test(user_input):
     # Tanyakan ke Llama
     print(user_input)
     print("🟢 Jawaban untuk pertanyaan pengguna:")
-    print(ask_llama(user_input, context, extracted["PRD"]))
+    answer = ask_llama(user_input, context, extracted["PRD"])
+
+    return answer
 
 def filter_df_from_today(df):
     today = datetime.today().date()
@@ -229,11 +231,16 @@ def ask_llama(question, context, commodity):
     # Membuat system_prompt dengan hari ini
     system_prompt = (
         f"Gunakan konteks untuk menjawab pertanyaan tentang strategi bisnis atau prediksi harga {commodity}. "
-        f"Prediksi selalu dimulai dari hari ini ({today_date}). Gunakan **hanya data yang sudah tersedia** untuk "
+        f"Prediksi selalu dimulai dari hari ini ({today_date}) hiraukan kata ke depan. Gunakan **hanya data yang sudah tersedia** untuk "
         "menjawab pertanyaan. Jangan membuat prediksi atau menyimpulkan harga berdasarkan data yang tidak ada. "
         "Jika pertanyaan mengarah pada masa depan, jawab berdasarkan data yang sudah ada, tanpa memprediksi atau "
         "menyimpulkan sesuatu yang tidak ada dalam data."
     )
+
+    # Tambahkan tanggal hari ini ke dalam konteks
+    context += f"\nHari ini adalah {today_date}.\n"
+
+
     response = requests.post(
         "http://localhost:11434/api/chat",
         json={
@@ -255,37 +262,12 @@ def ask_llama(question, context, commodity):
 
 # MAIN
 
-# test_inputs = [
-#     "berapa harga cabai untuk 3 hari ke depan",
-#     "tolong tampilkan harga cabai selama satu bulan",
-#     "aku pengen tau harga cabai buat 2 tahun ke depan",
-#     "berapa sih harga cabai kalau dihitung 30 hari dari sekarang?",
-#     "bisa kasih tau harga bawang putih dalam 15 hari ke depan?",
-#     "harga cabai kalau saya pantau selama 10 hari gimana?",
-#     "prediksi harga tomat selama seminggu ke depan dong",
-#     "berapa harga cabe rawit dalam rentang 2 minggu?",
-#     "saya ingin melihat harga bawang merah selama satu tahun penuh",
-#     "coba lihat harga cabe ijo selama 5 hari ya",
-#     "berapa kira-kira harga cabai selama tiga bulan?",
-#     "perlu info harga bawang merah untuk 14 hari ke depan",
-#     "apa harga cabai akan naik selama 40 hari mendatang?",
-#     "kasih saya data harga bawang putih untuk sebulan ke depan dong"
-# ]
-
-# for input_text in test_inputs:
-#     comodity, num_days = extract_comodity_and_days(input_text)
-#     print(f"Input: {input_text} => Commodity: {comodity}, Num_days: {num_days}")
-
 print("-----------------------------------------------")
 
-# for input_text in test_inputs:
-#     entities = extract_info(input_text)
-#     print(f"Input: {input_text} => {entities} ")
 
 input = "bagaimana harga cabai seminggu"
 
-# chatbot_test(input("enter query : "))
-chatbot_test(input)
+chatbot_run(input)
 
 
 # Contoh kalimat user yang typo + expected hasil setelah spelling correction
